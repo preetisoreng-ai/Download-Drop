@@ -1,0 +1,2165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Package Drop</title>
+    <meta
+      name="description"
+      content="An interaction experiment: a download becomes a package parachuting down to you. Downloading means something is coming to you."
+    />
+    <meta name="theme-color" content="#FFFFFF" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              sky: "#F7F7F7",
+              ink: "#0E0E12",
+              muted: "#9A9AA3",
+              peach: "#FFB36B",
+              rose: "#FF6F91",
+              violet: "#6E6BFF",
+            },
+            fontFamily: {
+              sans: ['"Inter"', "system-ui", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      :root {
+        --sky: #f8f8f8;
+        --black: #121212;
+        --violet: #7a42f7;
+        --lime: #c6fa2c;
+        --ink: #0e0e12;
+        --muted: #9a9aa3;
+        --muted-2: #5e5e67;
+        --sheet: #ffffff;
+        --tile: #f3f3f6;
+
+        --clay: #ff5f73; /* warning */
+        --hair: rgba(14, 14, 18, 0.08);
+        --hair-2: rgba(14, 14, 18, 0.14);
+        /* the one vivid accent, sampled from the reference: peach → rose → violet */
+        --grad: linear-gradient(120deg, #ffb36b 0%, #ff6f91 46%, #6e6bff 100%);
+        --card-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.9),
+          0 0 0 1px rgba(14, 14, 18, 0.04),
+          0 16px 36px -18px rgba(40, 40, 80, 0.28);
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        color: var(--ink);
+        background: #f7f7f7;
+      }
+      body {
+        font-family: "Inter", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        font-feature-settings: "ss01", "cv11";
+        overflow: hidden;
+        overscroll-behavior: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      ::selection {
+        background: var(--ink);
+        color: var(--sky);
+      }
+      button {
+        font: inherit;
+        color: inherit;
+      }
+      p,
+      h1,
+      h2 {
+        margin: 0;
+      }
+      /* small grey uppercase labels, as in the reference widgets */
+      .label {
+        font-weight: 600;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .display {
+        font-weight: 700;
+        letter-spacing: -0.035em;
+        line-height: 1.04;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      :focus-visible {
+        outline: 2px solid var(--violet);
+        outline-offset: 3px;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      /* ---------- Device: a framed phone on desktop, the real screen on phones ---------- */
+      .stage {
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .device {
+        position: relative;
+        width: 412px;
+        height: 866px;
+        /* iPhone 15, Pink: a satin pink aluminium band around a black glass border */
+        padding: 6.5px;
+        border-radius: 64px;
+        border: 4.5px solid transparent;
+        background:
+          linear-gradient(#0c0c0d, #0c0c0d) padding-box,
+          linear-gradient(145deg, #f8dadd 0%, #e6b3b9 34%, #f5cfd3 58%, #d89ea6 100%) border-box;
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+          0 0 0 0.5px rgba(150, 100, 104, 0.45),
+          0 60px 90px -50px rgba(120, 70, 76, 0.35),
+          0 24px 40px -24px rgba(0, 0, 0, 0.2);
+        transform-origin: 0 0;
+      }
+      .device::before,
+      .device::after {
+        content: "";
+        position: absolute;
+        width: 3px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, #d39aa2, #efc4c9);
+      }
+      .device::before {
+        left: -7.5px;
+        top: 176px;
+        height: 100px;
+        box-shadow: 0 -60px 0 0 #dfaab1;
+      }
+      .device::after {
+        right: -7.5px;
+        top: 230px;
+        height: 96px;
+      }
+      .screen {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 53px;
+        overflow: hidden;
+        isolation: isolate;
+        background: var(--sky);
+        touch-action: none;
+      }
+      .statusbar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 30;
+        height: 54px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 30px 0 40px;
+        font:
+          600 16px/1 -apple-system,
+          "SF Pro Text",
+          "Inter",
+          sans-serif;
+        letter-spacing: -0.01em;
+        pointer-events: none;
+      }
+      .island {
+        position: absolute;
+        left: 50%;
+        top: 11px;
+        width: 124px;
+        height: 36px;
+        margin-left: -62px;
+        border-radius: 20px;
+        background: #000;
+      }
+      .home-ind {
+        position: absolute;
+        left: 50%;
+        bottom: 8px;
+        width: 136px;
+        height: 5px;
+        margin-left: -68px;
+        border-radius: 3px;
+        background: var(--ink);
+        z-index: 30;
+      }
+      @media (max-width: 639px) {
+        html,
+        body {
+          background: var(--sky);
+        }
+        .stage {
+          padding: 0;
+          display: block;
+        }
+        .device {
+          width: 100%;
+          height: 100dvh;
+          padding: 0;
+          border-radius: 0;
+          background: none;
+          box-shadow: none;
+          border: 0;
+        }
+        .device::before,
+        .device::after,
+        .statusbar,
+        .home-ind {
+          display: none;
+        }
+        .screen {
+          border-radius: 0;
+        }
+      }
+
+      /* ---------- Scene ---------- */
+      .scene,
+      .scene canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+      .scene svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+      }
+      .scene {
+        opacity: 0;
+        transition: opacity 0.6s ease;
+      }
+      .scene.on {
+        opacity: 1;
+      }
+      .runway-band {
+        /* The polygons begin at the central landing point. Reveal their length
+           toward the bottom edge instead of scaling/dropping them from above. */
+        clip-path: inset(0 0 100% 0);
+        will-change: clip-path;
+      }
+      .scene.on .runway-band {
+        animation: runwayUnfurl 1.35s cubic-bezier(0.16, 0.82, 0.2, 1) forwards;
+      }
+      /* Wait for the cover stripes to clear, then sweep out from the centre. */
+      .scene.on .runway-violet { animation-delay: 0.78s; }
+      .scene.on .runway-black { animation-delay: 0.84s; }
+      .scene.on .runway-lime { animation-delay: 0.9s; }
+      @keyframes runwayUnfurl {
+        from { clip-path: inset(0 0 100% 0); }
+        to { clip-path: inset(0 0 0 0); }
+      }
+      .ground-fade {
+        transition: opacity 0.6s ease;
+      }
+
+      /* ---------- Card view ---------- */
+      .card-view {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        padding: calc(max(54px, env(safe-area-inset-top)) + 22px) 18px
+          calc(max(24px, env(safe-area-inset-bottom)) + 16px);
+        background: #ffffff;
+        transition: visibility 0s linear 0.9s;
+      }
+      .card-view::before,
+      .card-view::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        z-index: 0;
+        pointer-events: none;
+        transition: transform 0.9s cubic-bezier(0.72, 0, 0.18, 1);
+        will-change: transform;
+      }
+      .card-view::before {
+        left: 31.5%;
+        width: 37%;
+        background: var(--violet);
+      }
+      .card-view::after {
+        left: 68.5%;
+        width: 31.5%;
+        background: var(--lime);
+      }
+      .card-view > * {
+        position: relative;
+        z-index: 1;
+        transition: opacity 0.25s ease, transform 0.45s cubic-bezier(0.6, 0, 0.3, 1);
+      }
+      .card-view.away {
+        visibility: hidden;
+        pointer-events: none;
+      }
+      .card-view.away::before { transform: translateY(-105%); }
+      .card-view.away::after { transform: translateY(105%); }
+      .card-view.away > * {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      /* wide-tracked kicker, as in the reference */
+      .kicker {
+        font-weight: 500;
+        font-size: 11px;
+        letter-spacing: 0.34em;
+        text-transform: uppercase;
+        color: var(--black);
+        padding: 0 6px;
+        margin-top: 34px;
+      }
+      .card-view h1 {
+        font-size: 46px;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        line-height: 1.02;
+        margin-top: 12px;
+        padding: 0 6px;
+        color: var(--black);
+      }
+      .card-view h1 .line2 {
+        display: block;
+      }
+      /* letters change colour where they cross a band: the gradient is sized to the whole
+         screen and offset to each word's position (set in JS), then clipped to the text */
+      .band {
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        background-repeat: no-repeat;
+      }
+      .band.v {
+        background-image: linear-gradient(90deg, var(--violet) 0 31.5%, #ffffff 31.5% 68.5%, var(--black) 68.5% 100%);
+      }
+      .band.l {
+        background-image: linear-gradient(90deg, var(--violet) 0 31.5%, var(--lime) 31.5% 68.5%, var(--black) 68.5% 100%);
+      }
+      .file-block {
+        margin: auto 0;
+        padding-bottom: 70px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .file-block .doc {
+        width: 78px;
+        height: 97px;
+        filter:
+          drop-shadow(0 9px 8px rgba(18, 18, 18, 0.26))
+          drop-shadow(0 21px 24px rgba(18, 18, 18, 0.2));
+        transition:
+          transform 0.7s cubic-bezier(0.6, 0, 0.3, 1),
+          opacity 0.4s ease 0.25s;
+      }
+      .file-block .name {
+        margin-top: 22px;
+        font-weight: 600;
+        font-size: 18px;
+        letter-spacing: -0.02em;
+        color: var(--black);
+        word-break: break-all;
+      }
+      .file-block .meta {
+        margin-top: 6px;
+        font-weight: 500;
+        font-size: 13.5px;
+        color: rgba(18, 18, 18, 0.62);
+      }
+      /* solid download pill */
+      .dl {
+        margin-top: 30px;
+        width: 268px;
+        height: 60px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        overflow: hidden;
+        display: flex;
+        cursor: pointer;
+        background: #000;
+        box-shadow: 0 18px 30px -18px rgba(18, 18, 18, 0.55);
+        transition: transform 0.4s cubic-bezier(0.34, 1.5, 0.64, 1);
+      }
+      .dl .main {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        background: #000;
+        color: #fff;
+        font-weight: 600;
+        font-size: 18px;
+        letter-spacing: -0.01em;
+      }
+      @keyframes downloadNudge {
+        0%, 100% { transform: translateY(0); }
+        36% { transform: translateY(3px); }
+        58% { transform: translateY(-1.5px); }
+        76% { transform: translateY(1px); }
+      }
+      .dl:hover:not(:disabled) .main svg,
+      .dl:focus-visible:not(:disabled) .main svg {
+        animation: downloadNudge 0.72s cubic-bezier(0.34, 1.4, 0.64, 1) infinite;
+      }
+      .dl:active {
+        transform: scale(0.97);
+      }
+      .dl:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+
+      /* ---------- HUD ---------- */
+      .hud {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(max(54px, env(safe-area-inset-top)) + 12px);
+        z-index: 12;
+        display: flex;
+        justify-content: center;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+      }
+      .hud.on {
+        opacity: 1;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        max-width: calc(100% - 32px);
+        padding: 12px 18px 12px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.86);
+        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
+        box-shadow: var(--card-shadow);
+      }
+      .chip .pulse {
+        flex: none;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--violet);
+      }
+      .chip .label {
+        color: #a8a5bb;
+        letter-spacing: 0.08em;
+      }
+      .chip .divider {
+        flex: none;
+        width: 1px;
+        height: 18px;
+        background: rgba(122, 66, 247, 0.45);
+      }
+      .chip .what {
+        font-weight: 500;
+        font-size: 14px;
+        letter-spacing: -0.01em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .tag {
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: 12;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #fff;
+        box-shadow: var(--card-shadow);
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--ink);
+        font-variant-numeric: tabular-nums;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.35s ease;
+        will-change: transform;
+      }
+      .tag.on {
+        opacity: 1;
+      }
+      .tag b {
+        font-weight: inherit;
+      }
+
+      /* ---------- Panels ---------- */
+      .panel {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        top: calc(max(54px, env(safe-area-inset-top)) + 16px);
+        z-index: 14;
+        padding: 22px 20px 20px;
+        border-radius: 32px;
+        background: rgba(255, 255, 255, 0.9);
+        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
+        box-shadow: var(--card-shadow);
+        text-align: center;
+        animation: fadeUp 0.7s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+      }
+      .panel h2 {
+        font-size: 30px;
+        margin: 10px 0 12px;
+      }
+      .panel .lede {
+        font-size: 14.5px;
+        line-height: 1.5;
+        color: var(--muted-2);
+        max-width: 30ch;
+        margin: 0 auto;
+      }
+      .file-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 2px;
+        padding: 10px 16px 10px 10px;
+        border-radius: 20px;
+        background: var(--tile);
+        text-align: left;
+        max-width: 100%;
+      }
+      .file-row svg {
+        flex: none;
+      }
+      .file-row .n {
+        font-weight: 600;
+        font-size: 14.5px;
+        letter-spacing: -0.01em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .actions {
+        margin-top: 18px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+      .btn {
+        height: 50px;
+        padding: 0 22px;
+        border-radius: 18px;
+        border: 0;
+        background: var(--tile);
+        font-weight: 600;
+        font-size: 15px;
+        letter-spacing: -0.01em;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        color: var(--ink);
+        transition:
+          transform 0.4s cubic-bezier(0.34, 1.5, 0.64, 1),
+          background 0.25s ease,
+          filter 0.25s ease;
+      }
+      .btn:active {
+        transform: scale(0.96);
+      }
+      .btn.primary {
+        background: var(--black);
+        color: #fff;
+        box-shadow: 0 14px 24px -14px rgba(18, 18, 18, 0.55);
+      }
+      .btn.primary:hover {
+        filter: brightness(1.05);
+      }
+      .btn:not(.primary):hover {
+        background: #ebebf0;
+      }
+      .dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 6px;
+        vertical-align: -1px;
+        background: var(--lime);
+        box-shadow: 0 0 0 1.5px var(--black);
+      }
+      .dot.warn {
+        background: var(--clay);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .card-view,
+        .file-block .doc,
+        .scene {
+          transition-duration: 0.01s;
+        }
+        .card-view::before,
+        .card-view::after,
+        .card-view > * {
+          transition-duration: 0.01s;
+        }
+        .scene.on .runway-band {
+          animation-duration: 0.01s;
+          animation-delay: 0s;
+        }
+        .dl:hover .main svg,
+        .dl:focus-visible .main svg {
+          animation: none;
+        }
+      }
+
+      /* Reference fidelity pass: a high-contrast black iPhone frame, generous editorial
+         spacing, and the sharper monochrome / violet / acid-lime visual language. */
+      @media (min-width: 640px) {
+        .stage {
+          padding: 8px;
+          background: #f4f4f4;
+        }
+        .device {
+          padding: 5px;
+          border: 0;
+          border-radius: 62px;
+          background: #050505;
+          box-shadow:
+            inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+            0 0 0 1px rgba(0, 0, 0, 0.72),
+            0 26px 54px -26px rgba(0, 0, 0, 0.28);
+        }
+        .device::before,
+        .device::after {
+          background: linear-gradient(90deg, #090909, #3a3a3a 58%, #090909);
+        }
+        .device::before { left: -3px; }
+        .device::after { right: -3px; }
+        .screen { border-radius: 55px; }
+      }
+      .card-view {
+        padding-left: 26px;
+        padding-right: 26px;
+      }
+      .kicker {
+        margin-top: 38px;
+        padding: 0;
+        font-size: 10px;
+        letter-spacing: 0.36em;
+      }
+      .card-view h1 {
+        margin-top: 8px;
+        padding: 0;
+        font-size: 45px;
+        line-height: 0.98;
+        letter-spacing: -0.055em;
+      }
+      .file-block { padding-bottom: 72px; }
+      .file-block .doc { width: 86px; height: 107px; }
+      .file-block .name {
+        margin-top: 24px;
+        font-size: 18px;
+        font-weight: 650;
+      }
+      .file-block .meta {
+        margin-top: 8px;
+        color: rgba(18, 18, 18, 0.56);
+      }
+      .dl {
+        width: 286px;
+        height: 62px;
+        margin-top: 36px;
+        box-shadow: none;
+      }
+      .dl .main { font-size: 18px; }
+      .chip {
+        padding: 13px 19px 13px 14px;
+        box-shadow: 0 12px 30px -20px rgba(0, 0, 0, 0.35);
+      }
+      .chip .pulse {
+        width: 10px;
+        height: 10px;
+        background: linear-gradient(135deg, #d58cff, var(--violet));
+        box-shadow: 0 0 12px rgba(122, 66, 247, 0.32);
+      }
+      .chip .label {
+        font-size: 11px;
+        letter-spacing: 0.07em;
+      }
+      .tag {
+        padding: 7px 13px;
+        font-size: 14px;
+        box-shadow: 0 12px 28px -18px rgba(0, 0, 0, 0.34);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <p style="padding: 40px; font-family: sans-serif">
+        Package Drop needs JavaScript to open the sky.
+      </p>
+    </noscript>
+
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+    <script
+      src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"
+      crossorigin
+    ></script>
+    <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+
+    <!-- Sound: wind is band-passed noise that rises with fall speed; the canopy flutters on a
+         slow LFO; snap, thud and crinkle are short shaped bursts. All quiet on purpose. -->
+    <script>
+      window.Sound = (function () {
+        var ctx = null,
+          master = null,
+          noise = null,
+          wind = null,
+          flutter = null;
+        function ensure() {
+          if (!ctx) {
+            var AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return null;
+            try {
+              ctx = new AC({ latencyHint: "interactive" });
+            } catch (e) {
+              ctx = new AC();
+            }
+            master = ctx.createGain();
+            master.gain.value = 1;
+            var comp = ctx.createDynamicsCompressor();
+            comp.threshold.value = -18;
+            comp.ratio.value = 4;
+            master.connect(comp);
+            comp.connect(ctx.destination);
+            var rate = ctx.sampleRate;
+            noise = ctx.createBuffer(1, rate * 2, rate);
+            var d = noise.getChannelData(0);
+            for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+            // wind bed
+            var ws = ctx.createBufferSource();
+            ws.buffer = noise;
+            ws.loop = true;
+            var wf = ctx.createBiquadFilter();
+            wf.type = "bandpass";
+            wf.frequency.value = 500;
+            wf.Q.value = 0.7;
+            var wg = ctx.createGain();
+            wg.gain.value = 0;
+            ws.connect(wf);
+            wf.connect(wg);
+            wg.connect(master);
+            ws.start();
+            wind = { f: wf, g: wg };
+            // canopy flutter: low noise, amplitude-wobbled
+            var fs = ctx.createBufferSource();
+            fs.buffer = noise;
+            fs.loop = true;
+            var ff = ctx.createBiquadFilter();
+            ff.type = "lowpass";
+            ff.frequency.value = 260;
+            var fg = ctx.createGain();
+            fg.gain.value = 0;
+            var am = ctx.createGain();
+            am.gain.value = 0.5;
+            var lfo = ctx.createOscillator();
+            lfo.frequency.value = 7;
+            var la = ctx.createGain();
+            la.gain.value = 0.5;
+            lfo.connect(la);
+            la.connect(am.gain);
+            fs.connect(ff);
+            ff.connect(am);
+            am.connect(fg);
+            fg.connect(master);
+            fs.start();
+            lfo.start();
+            flutter = { g: fg, lfo: lfo };
+          }
+          if (ctx.state === "suspended") ctx.resume();
+          return ctx;
+        }
+        function ready() {
+          return ctx && ctx.state === "running";
+        }
+        function burst(t, o) {
+          var s = ctx.createBufferSource();
+          s.buffer = noise;
+          var f = ctx.createBiquadFilter();
+          f.type = o.type || "bandpass";
+          f.frequency.setValueAtTime(o.f, t);
+          if (o.f2) f.frequency.exponentialRampToValueAtTime(o.f2, t + o.d);
+          f.Q.value = o.q || 1;
+          var g = ctx.createGain();
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(o.g, t + (o.a || 0.003));
+          g.gain.exponentialRampToValueAtTime(0.0001, t + o.d);
+          s.connect(f);
+          f.connect(g);
+          g.connect(master);
+          s.start(t, Math.random() * 1.5, o.d + 0.05);
+        }
+        function tone(t, o) {
+          var osc = ctx.createOscillator();
+          osc.type = o.type || "sine";
+          osc.frequency.setValueAtTime(o.f, t);
+          if (o.f2) osc.frequency.exponentialRampToValueAtTime(o.f2, t + o.d * 0.8);
+          var g = ctx.createGain();
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(o.g, t + (o.a || 0.004));
+          g.gain.exponentialRampToValueAtTime(0.0001, t + o.d);
+          osc.connect(g);
+          g.connect(master);
+          osc.start(t);
+          osc.stop(t + o.d + 0.05);
+        }
+        return {
+          ensure: ensure,
+          // speed 0..1 of the fall, chute 0..1 (canopy open), on = scene active
+          air: function (speed, chute, on) {
+            if (!wind) return;
+            var t = ctx.currentTime;
+            wind.g.gain.setTargetAtTime(on ? 0.012 + speed * 0.07 : 0, t, 0.15);
+            wind.f.frequency.setTargetAtTime(380 + speed * 900, t, 0.2);
+            flutter.g.gain.setTargetAtTime(on ? chute * (0.05 + speed * 0.05) : 0, t, 0.2);
+            flutter.lfo.frequency.setTargetAtTime(5 + speed * 6, t, 0.3);
+          },
+          whoosh: function () {
+            if (!ready()) return;
+            burst(ctx.currentTime + 0.01, { f: 500, f2: 1600, q: 0.8, g: 0.05, a: 0.15, d: 0.7 });
+          },
+          snap: function () {
+            if (!ready()) return;
+            var t = ctx.currentTime + 0.005;
+            burst(t, { f: 1600, q: 1.2, g: 0.14, d: 0.07 });
+            burst(t + 0.015, { type: "lowpass", f: 500, g: 0.12, d: 0.18 });
+            tone(t, { f: 110, f2: 70, g: 0.08, d: 0.22 });
+          },
+          thud: function () {
+            if (!ready()) return;
+            var t = ctx.currentTime + 0.005;
+            tone(t, { f: 95, f2: 52, g: 0.16, d: 0.3 });
+            burst(t, { type: "lowpass", f: 700, g: 0.1, d: 0.12 });
+            burst(t + 0.04, { f: 900, f2: 300, q: 0.6, g: 0.04, a: 0.05, d: 0.6 });
+          },
+          crinkle: function () {
+            if (!ready()) return;
+            var t = ctx.currentTime + 0.005;
+            for (var i = 0; i < 6; i++)
+              burst(t + i * (0.02 + Math.random() * 0.03), {
+                f: 2000 + Math.random() * 2600,
+                q: 2.4,
+                g: 0.035,
+                d: 0.025,
+              });
+          },
+          chime: function () {
+            if (!ready()) return;
+            var t = ctx.currentTime + 0.02;
+            tone(t, { f: 880, g: 0.035, d: 1.0 });
+            tone(t + 0.1, { f: 1318.5, g: 0.028, d: 1.3 });
+          },
+          stall: function () {
+            if (!ready()) return;
+            tone(ctx.currentTime + 0.02, { f: 260, f2: 180, g: 0.04, d: 0.6, type: "triangle" });
+          },
+        };
+      })();
+      window.Haptic = function (p) {
+        try {
+          if (navigator.vibrate) navigator.vibrate(p);
+        } catch (e) {}
+      };
+    </script>
+
+    <!--
+      The drop. Download progress q maps straight to height: a short hover high up, a free fall
+      that accelerates, a sideways gust, the canopy snapping open at 60%, a slow float, and a final
+      approach onto the landing zone. Once the canopy is open the package hangs from it on a
+      damped pendulum driven by the canopy's sideways acceleration, so gusts and cursor wind make
+      it swing. Landing squashes the box, collapses the canopy onto the ground and opens the lid.
+    -->
+    <script>
+      window.createDrop = function (els, cb) {
+        var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var ctx2d = els.fx.getContext("2d");
+        // the payload is the file itself: a 50 x 64 gradient document
+        var BOX_W = 68,
+          BOX_H = 86, // the 50 x 64 document, drawn at 1.35x
+          LINE = 112,
+          CANOPY = 1.56, // canopy drawn at 108 local units, scaled up
+          CHUTE_AT = 0.6;
+        var S = null,
+          raf = 0,
+          last = performance.now(),
+          parts = [],
+          dpr = 1;
+
+        function clamp(v, a, b) {
+          return v < a ? a : v > b ? b : v;
+        }
+        function lerp(a, b, t) {
+          return a + (b - a) * t;
+        }
+        function eio(t) {
+          return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        }
+        function eout(t) {
+          return 1 - Math.pow(1 - t, 3);
+        }
+
+        function geo() {
+          var sz = cb.size(),
+            W = sz.w,
+            H = sz.h;
+          // the runway's vanishing point / landing pad sits at 74% of the screen height
+          var zoneY = H * 0.744;
+          var groundY = zoneY - 22;
+          return {
+            W: W,
+            H: H,
+            groundY: groundY,
+            zoneY: zoneY,
+            yTop: H * 0.25,
+            yLand: zoneY - BOX_H / 2 - 2,
+          };
+        }
+        // fraction of the vertical journey reached at progress q
+        function fall(q) {
+          var u;
+          if (q <= 0.2) return 0;
+          if (q <= 0.45) {
+            u = (q - 0.2) / 0.25;
+            return 0.34 * u * u;
+          }
+          if (q <= 0.6) {
+            u = (q - 0.45) / 0.15;
+            return 0.34 + 0.28 * u;
+          }
+          if (q <= 0.9) {
+            u = (q - 0.6) / 0.3;
+            return 0.62 + 0.28 * u;
+          }
+          u = (q - 0.9) / 0.1;
+          return 0.9 + 0.1 * (1 - (1 - u) * (1 - u));
+        }
+        // the gust between 45% and 60%, eased back out by 90%
+        function gust(q, W) {
+          if (q <= 0.45) return 0;
+          if (q <= 0.6) return W * 0.17 * eio((q - 0.45) / 0.15);
+          if (q <= 0.9) return W * 0.17 * (1 - eio((q - 0.6) / 0.3));
+          return 0;
+        }
+
+        function reset() {
+          S = {
+            mode: "idle",
+            t: 0,
+            q: 0,
+            qT: 0,
+            cx: 0,
+            cy: 0,
+            pcx: null,
+            vcx: 0,
+            acx: 0,
+            th: 0,
+            om: 0,
+            open: false,
+            cs: 0,
+            csv: 0,
+            jy: 0,
+            jyv: 0,
+            sq: 0,
+            sqv: 0,
+            wind: 0,
+            windT: 0,
+            landT: 0,
+            collapse: 0,
+            lid: 0,
+            rise: 0,
+            riseV: 0,
+            delivered: false,
+            alpha: 0,
+            speed: 0,
+            prevY: null,
+            stuckT: 0,
+          };
+          parts.length = 0;
+        }
+        reset();
+
+        // The canopy, in local units (108 wide, hem tips at x = -54, -20, 20, 54).
+        // Three panels: white-to-lavender sides and a coral centre that narrows to the apex.
+        // Each panel's hem curves up between the tips, showing the underside (the lens shapes)
+        // beneath it, which is what gives the canopy its depth. Ripple and agitation move the
+        // apex, the rib curves and the hem.
+        function chutePaths(ripple, t, agit) {
+          // Five panels (lavender, white, coral, white, lavender) meeting at the apex. Each panel
+          // ends in an arch, and beneath the arches sits the translucent underside: a shallow bowl,
+          // lavender at the sides and peach in the middle. Local units: 108 wide, hem at y = 0,
+          // panel seams at x = ±46 and ±22. Ripple moves the apex, arches and bowl.
+          var a = agit || 0;
+          var f = function (v) { return v.toFixed(2); };
+          var top = -56 - Math.sin(t * 2.3) * (0.6 + ripple * 1.8) - a * Math.sin(t * 9) * 1.2;
+          var k = top / -56;
+          var y = function (v) { return f(v * k); };
+          var wob = function (i, amp) { return Math.sin(t * 3.1 + i * 1.7) * (0.4 + ripple * amp) + a * Math.sin(t * 11 + i) * 0.7; };
+          var acC = f(-24 + wob(1, 1.6)), acL = f(-17 + wob(0, 1.3)), acR = f(-17 + wob(2, 1.3));
+          var ub = 13 + Math.sin(t * 2.6) * (0.4 + ripple * 1.4);
+          var sw = Math.sin(t * 1.7) * ripple * 1.8;
+          var T = f(top);
+          var ribL = f(-15 + sw) + "," + y(-54.5) + " " + f(-23 + sw * 0.5) + "," + y(-36);
+          var ribLr = f(-23 + sw * 0.5) + "," + y(-36) + " " + f(-15 + sw) + "," + y(-54.5);
+          var ribR = f(15 + sw) + "," + y(-54.5) + " " + f(23 + sw * 0.5) + "," + y(-36);
+          return {
+            uL: "M-54,1 L-54,-14 L-19,-14 L-18.4," + f(ub - 0.3) + " C-30," + f(ub - 0.9) + " -45," + f(ub - 5.5) + " -54,1 Z",
+            uC: "M-18.6,-14 L19.2,-14 L19,"+ f(ub - 0.3) + " C10," + f(ub + 0.7) + " -10," + f(ub + 0.7) + " -18.4," + f(ub - 0.3) + " Z",
+            uR: "M54,0 L54,-14 L19,-14 L19," + f(ub - 0.3) + " C30," + f(ub - 0.9) + " 45," + f(ub - 5.5) + " 54,0 Z",
+            lavL: "M-54,1 C-57," + y(-30) + " -37," + y(-55.5) + " 0," + T + " C-28," + y(-55) + " -46," + y(-34) + " -46,-1.5 Q-50,-4 -54,1 Z",
+            whiteL: "M-46,-1.5 C-46," + y(-34) + " -28," + y(-55) + " 0," + T + " C" + ribL + " -22,-2 Q-34," + acL + " -46,-1.5 Z",
+            coral: "M-22,-2 C" + ribLr + " 0," + T + " C" + ribR + " 22,-2 Q0," + acC + " -22,-2 Z",
+            whiteR: "M46,-1.5 C46," + y(-34) + " 28," + y(-55) + " 0," + T + " C" + ribR + " 22,-2 Q34," + acR + " 46,-1.5 Z",
+            lavR: "M54,0 C57," + y(-30) + " 37," + y(-55.5) + " 0," + T + " C28," + y(-55) + " 46," + y(-34) + " 46,-1.5 Q50,-4 54,0 Z",
+            rim: "M-22,-2 Q0," + acC + " 22,-2",
+          };
+        }
+        function rot(px, py, deg) {
+          var r = (deg * Math.PI) / 180,
+            c = Math.cos(r),
+            s = Math.sin(r);
+          return [px * c - py * s, px * s + py * c];
+        }
+
+        function dust(x, y, n, spread) {
+          for (var i = 0; i < n; i++) {
+            var dir = Math.random() < 0.5 ? -1 : 1;
+            parts.push({
+              k: "dust",
+              x: x + dir * (8 + Math.random() * 20),
+              y: y - Math.random() * 3,
+              vx: dir * (30 + Math.random() * 110) * spread,
+              vy: -(6 + Math.random() * 34),
+              r: 2 + Math.random() * 3,
+              life: 0,
+              max: 0.9 + Math.random() * 0.8,
+            });
+          }
+        }
+
+        function step(dt) {
+          var g = geo(),
+            W = g.W,
+            H = g.H;
+          S.t += dt;
+          var t = S.t;
+
+          // cursor wind relaxes back to calm
+          S.windT *= Math.exp(-dt * 0.9);
+          S.wind += (S.windT - S.wind) * (1 - Math.exp(-dt * 2.2));
+
+          if (S.mode === "fall") {
+            S.q += (S.qT - S.q) * (1 - Math.exp(-dt * 3));
+            if (S.qT >= 1 && S.q > 0.997) S.q = 1;
+          }
+          var q = S.q;
+          S.alpha = clamp(q / 0.04, 0, 1);
+
+          // the controlled point: where the package (or, once open, the canopy) is pulled to
+          var f = fall(q);
+          var by = lerp(g.yTop, g.yLand, f);
+          if (q < 0.2) by = g.yTop - (1 - eout(q / 0.2)) * 70 + Math.sin(t * 1.4) * 2;
+          var near = q > 0.9 ? (q - 0.9) / 0.1 : 0;
+          var bx = W / 2 + gust(q, W) + S.wind * W * 0.09 * (1 - near);
+          if (S.mode === "stuck") {
+            S.stuckT += dt;
+            bx += Math.sin(t * 1.3) * 7 + (reduced ? 0 : Math.sin(t * 17) * 0.6);
+          }
+
+          // canopy snaps open at 60%
+          if (!S.open && q >= CHUTE_AT && S.mode !== "land") {
+            S.open = true;
+            S.cs = 0.12;
+            S.csv = 0;
+            S.om += (Math.random() < 0.5 ? -1 : 1) * 0.9;
+            S.jyv = 240;
+            Sound.snap();
+            Haptic(12);
+            cb.onPhase && cb.onPhase("open");
+          }
+          if (S.open) {
+            S.csv += (230 * (1 - S.cs) - 15 * S.csv) * dt;
+            S.cs += S.csv * dt;
+          }
+          // snap jolt: the box lurches down then catches
+          S.jyv += (-140 * S.jy - 13 * S.jyv) * dt;
+          S.jy += S.jyv * dt;
+
+          var cx = bx,
+            cy = by - LINE;
+          if (S.pcx == null) S.pcx = cx;
+          var vcx = (cx - S.pcx) / Math.max(dt, 1e-3);
+          S.acx += ((vcx - S.vcx) / Math.max(dt, 1e-3) - S.acx) * (1 - Math.exp(-dt * 10));
+          S.vcx = vcx;
+          S.pcx = cx;
+          S.cx = cx;
+          S.cy = cy;
+
+          // pendulum under the canopy
+          if (S.open && S.mode !== "land") {
+            var G = 900;
+            var alpha =
+              -(G / LINE) * Math.sin(S.th) - 1.5 * S.om - (reduced ? 0 : S.acx / LINE) * 0.9;
+            S.om += alpha * dt;
+            S.th += S.om * dt;
+            S.th = clamp(S.th, -0.7, 0.7);
+          }
+
+          var boxX, boxY, boxRot;
+          if (S.open && S.mode !== "land") {
+            boxX = cx + Math.sin(S.th) * LINE;
+            boxY = cy + Math.cos(S.th) * LINE + S.jy;
+            boxRot = (S.th * 180) / Math.PI;
+          } else {
+            boxX = bx;
+            boxY = by + S.jy;
+            boxRot = q < CHUTE_AT ? Math.sin(t * 2.1) * 5 + clamp(S.vcx * 0.02, -8, 8) : 0;
+          }
+
+          // fall speed for sound and wind streaks
+          if (S.prevY == null) S.prevY = boxY;
+          var vy = (boxY - S.prevY) / Math.max(dt, 1e-3);
+          S.prevY = boxY;
+          S.speed += (clamp(Math.abs(vy) / 500, 0, 1) - S.speed) * (1 - Math.exp(-dt * 4));
+
+          // ---------- landing ----------
+          if (S.mode === "fall" && q >= 1) {
+            S.mode = "land";
+            S.landT = 0;
+            S.sqv = -7;
+            S.th = S.th * 0.4;
+            S.landX = boxX;
+            S.landRot = boxRot;
+            S.c0x = cx;
+            S.c0y = cy;
+            S.c0tilt = -S.th * 20;
+            dust(boxX, g.zoneY, reduced ? 0 : 26, 1);
+            Sound.thud();
+            Haptic([18, 40, 10]);
+            cb.onPhase && cb.onPhase("land");
+          }
+          if (S.mode === "land") {
+            S.landT += dt;
+            boxX = S.landX;
+            boxY = g.yLand;
+            boxRot = S.landRot * Math.exp(-S.landT * 8);
+            S.sqv += (-320 * S.sq - 16 * S.sqv) * dt;
+            S.sq += S.sqv * dt;
+            S.collapse = eio(clamp(S.landT / 1.2, 0, 1));
+            var lt = clamp((S.landT - 1.05) / 0.45, 0, 1);
+            if (lt > 0 && S.lid === 0) {
+              Sound.crinkle();
+              Haptic(6);
+            }
+            S.lid = eout(lt);
+            if (S.landT > 1.35) {
+              S.riseV += (300 * (1 - S.rise) - 17 * S.riseV) * dt;
+              S.rise += S.riseV * dt;
+            }
+            if (!S.delivered && S.landT > 1.9) {
+              S.delivered = true;
+              Sound.chime();
+              cb.onDelivered();
+            }
+          }
+
+          Sound.air(
+            S.mode === "land" ? 0 : S.speed,
+            S.open && S.mode !== "land" ? 1 : 0,
+            S.mode === "fall" || S.mode === "stuck"
+          );
+
+          // ---------- particles: wind streaks + dust ----------
+          var rate = (S.speed * 9 + (q > 0.45 && q < 0.62 ? 2 : 0) + Math.abs(S.wind) * 3) * (q > 0.04 ? 1 : 0);
+          if (!reduced && (S.mode === "fall" || S.mode === "stuck") && Math.random() < rate * dt) {
+            var side = Math.random() < 0.5 ? -1 : 1;
+            parts.push({
+              k: "streak",
+              x: boxX + side * (40 + Math.random() * 26),
+              y: boxY + (Math.random() - 0.3) * 44,
+              vx: 0,
+              vy: -(90 + S.speed * 240 + Math.random() * 60),
+              len: 16 + Math.random() * 24,
+              hue: Math.random() < 0.5 ? 0 : 1,
+              life: 0,
+              max: 0.55 + Math.random() * 0.4,
+            });
+          }
+          for (var i = parts.length - 1; i >= 0; i--) {
+            var p = parts[i];
+            p.life += dt;
+            if (p.life > p.max) {
+              parts.splice(i, 1);
+              continue;
+            }
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            if (p.k === "dust") {
+              p.vx *= Math.exp(-dt * 2.6);
+              p.vy *= Math.exp(-dt * 2);
+              p.vy -= 4 * dt;
+              p.r += dt * 7;
+            }
+          }
+
+          render(g, boxX, boxY, boxRot, t);
+        }
+
+        function render(g, boxX, boxY, boxRot, t) {
+          var vis = S.mode !== "idle";
+          els.drop.style.opacity = vis ? S.alpha : 0;
+
+          // box (squash anchored at its base)
+          var sq = 1 + S.sq * 0.09;
+          els.box.setAttribute(
+            "transform",
+            "translate(" +
+              boxX.toFixed(2) +
+              " " +
+              (boxY + BOX_H / 2).toFixed(2) +
+              ") rotate(" +
+              boxRot.toFixed(2) +
+              ") scale(" +
+              (2 - sq).toFixed(4) +
+              " " +
+              sq.toFixed(4) +
+              ") translate(0 " +
+              -BOX_H / 2 +
+              ")"
+          );
+          // on landing a soft glow blooms under the file
+          els.file.setAttribute("transform", "translate(0 " + (BOX_H / 2) + ") scale(" + (0.5 + 0.5 * Math.min(S.rise, 1.15)).toFixed(3) + ")");
+          els.file.style.opacity = S.rise > 0.02 ? Math.min(1, S.rise).toFixed(3) : 0;
+
+          // shadow on the ground, sharper and darker as the package nears
+          var h = clamp((g.zoneY - (boxY + BOX_H / 2)) / 420, 0, 1);
+          els.shadow.setAttribute("cx", boxX.toFixed(2));
+          els.shadow.setAttribute("cy", (g.zoneY + 1).toFixed(2));
+          els.shadow.setAttribute("rx", (16 + 18 * (1 - h)).toFixed(2));
+          els.shadow.setAttribute("ry", (3 + 4 * (1 - h)).toFixed(2));
+          els.shadow.style.opacity = vis ? (0.06 + 0.2 * (1 - h)) * S.alpha : 0;
+
+          // canopy
+          var chuteOn = S.open;
+          els.chute.style.opacity = chuteOn ? 1 : 0;
+          els.lines.style.opacity = chuteOn ? 1 : 0;
+          if (chuteOn) {
+            var cs = clamp(S.cs, 0, 1.2),
+              cx,
+              cy,
+              tilt,
+              sx,
+              sy,
+              ripple;
+            ripple = reduced ? 0 : clamp(S.speed * 1.4 + Math.abs(S.om) * 0.6, 0, 1.4);
+            if (S.mode === "land") {
+              // drift down beside the box and deflate onto the ground
+              var c = S.collapse;
+              cx = lerp(S.c0x, S.landX + 96, c);
+              cy = lerp(S.c0y, g.zoneY - 1, eio(c));
+              tilt = lerp(S.c0tilt, 8, c) + Math.sin(Math.PI * c) * 34; // tips over, then lies flat
+              sx = lerp(1, 0.62, c);
+              sy = lerp(1, 0.16, c);
+              ripple = (1 - c) * 0.8;
+            } else {
+              cx = S.cx + Math.sin(S.th) * 4;
+              cy = S.cy;
+              tilt =
+                -S.th * 20 + S.wind * 6 + (S.mode === "stuck" ? 10 + Math.sin(t * 1.3) * 3 : 0);
+              sx = cs * (1 + Math.sin(t * 2.7) * 0.012 * (1 + ripple));
+              sy = cs * (0.88 + 0.12 * cs);
+            }
+            sx *= CANOPY;
+            sy *= CANOPY;
+            els.chute.setAttribute(
+              "transform",
+              "translate(" +
+                cx.toFixed(2) +
+                " " +
+                cy.toFixed(2) +
+                ") rotate(" +
+                tilt.toFixed(2) +
+                ") scale(" +
+                sx.toFixed(4) +
+                " " +
+                sy.toFixed(4) +
+                ")"
+            );
+            var cp = chutePaths(ripple, t, S.mode === "stuck" ? 1 : 0);
+            els.cUL.setAttribute("d", cp.uL);
+            els.cUC.setAttribute("d", cp.uC);
+            els.cUR.setAttribute("d", cp.uR);
+            els.cLavL.setAttribute("d", cp.lavL);
+            els.cWhiteL.setAttribute("d", cp.whiteL);
+            els.cCoral.setAttribute("d", cp.coral);
+            els.cCoralSheen.setAttribute("d", cp.coral);
+            els.cWhiteR.setAttribute("d", cp.whiteR);
+            els.cLavR.setAttribute("d", cp.lavR);
+            els.cRim.setAttribute("d", cp.rim);
+            // suspension lines: canopy hem → box shoulders (slack curves once collapsed)
+            var hem = [
+                [-47, 0],
+                [-21, -1],
+                [22, -1],
+                [48.5, 0],
+              ],
+              sh = [
+                [-8, -43],
+                [-4, -43],
+                [4, -43],
+                [8, -43],
+              ];
+            var d = "";
+            for (var i = 0; i < hem.length; i++) {
+              var a = rot(hem[i][0] * sx, hem[i][1] * sy, tilt);
+              var b = rot(sh[i][0], sh[i][1] * (1 + S.sq * 0.09) + BOX_H / 2, boxRot);
+              var ax = cx + a[0],
+                ay = cy + a[1],
+                bxp = boxX + b[0],
+                byp = boxY + b[1] - BOX_H / 2 + BOX_H / 2;
+              byp = boxY + b[1] - BOX_H / 2;
+              if (S.mode === "land") {
+                var sag = 30 * S.collapse;
+                d +=
+                  "M" +
+                  ax.toFixed(1) +
+                  "," +
+                  ay.toFixed(1) +
+                  " Q" +
+                  ((ax + bxp) / 2).toFixed(1) +
+                  "," +
+                  (Math.max(ay, byp) + sag).toFixed(1) +
+                  " " +
+                  bxp.toFixed(1) +
+                  "," +
+                  byp.toFixed(1) +
+                  " ";
+              } else
+                d +=
+                  "M" +
+                  ax.toFixed(1) +
+                  "," +
+                  ay.toFixed(1) +
+                  " L" +
+                  bxp.toFixed(1) +
+                  "," +
+                  byp.toFixed(1) +
+                  " ";
+            }
+            els.lines.setAttribute("d", d);
+          }
+
+          // progress tag beside the package
+          var tagOn = S.mode === "fall" || S.mode === "stuck";
+          els.tag.classList.toggle("on", tagOn);
+          els.tag.style.transform =
+            "translate3d(" + (boxX + 56).toFixed(1) + "px," + (boxY + 10).toFixed(1) + "px,0)";
+
+          // particles
+          var c2 = ctx2d;
+          c2.setTransform(dpr, 0, 0, dpr, 0, 0);
+          c2.clearRect(0, 0, g.W, g.H);
+          for (var j = 0; j < parts.length; j++) {
+            var p = parts[j],
+              k = p.life / p.max;
+            if (p.k === "streak") {
+              var al = (0.6 * Math.sin(Math.PI * k)).toFixed(3);
+              var lg = c2.createLinearGradient(p.x, p.y, p.x, p.y + p.len);
+              lg.addColorStop(0, "rgba(18,18,18," + al + ")");
+              lg.addColorStop(1, "rgba(18,18,18,0)");
+              c2.strokeStyle = lg;
+              c2.lineWidth = 1.3;
+              c2.lineCap = "round";
+              c2.beginPath();
+              c2.moveTo(p.x, p.y);
+              c2.lineTo(p.x, p.y + p.len);
+              c2.stroke();
+            } else {
+              c2.fillStyle = "rgba(150,150,155," + (0.3 * (1 - k) * (1 - k)).toFixed(3) + ")";
+              c2.beginPath();
+              c2.arc(p.x, p.y, p.r, 0, 6.2832);
+              c2.fill();
+            }
+          }
+        }
+
+        function sizeCanvas() {
+          var sz = cb.size();
+          dpr = Math.min(window.devicePixelRatio || 1, 2) * (cb.scale ? cb.scale() : 1);
+          els.fx.width = Math.round(sz.w * dpr);
+          els.fx.height = Math.round(sz.h * dpr);
+          var g = geo();
+          // runway: three bands converging on the landing pad (fractions measured from the reference)
+          var tY = g.zoneY / g.H;
+          var P = function (pts) {
+            return pts.map(function (q) { return (q[0] * g.W).toFixed(1) + "," + (q[1] * g.H).toFixed(1); }).join(" ");
+          };
+          els.roadB.setAttribute("points", P([[0.364, tY], [0.416, tY], [0.074, 1.01], [0, 1.01], [0, 0.84]]));
+          els.roadV.setAttribute("points", P([[0.421, tY], [0.53, tY], [0.814, 1.01], [0.104, 1.01]]));
+          els.roadL.setAttribute("points", P([[0.537, tY], [0.58, tY], [1, 0.848], [1, 1.01], [0.848, 1.01]]));
+          els.pad.setAttribute("rx", (g.W * 0.08).toFixed(1));
+          els.zone.setAttribute("transform", "translate(" + g.W / 2 + " " + g.zoneY + ")");
+        }
+
+        function loop(now) {
+          var dt = Math.min((now - last) / 1000, 1 / 30);
+          last = now;
+          step(dt);
+          raf = requestAnimationFrame(loop);
+        }
+        window.addEventListener("resize", sizeCanvas);
+        sizeCanvas();
+        raf = requestAnimationFrame(loop);
+
+        return {
+          resize: sizeCanvas,
+          start: function () {
+            Sound.ensure();
+            reset();
+            S.mode = "fall";
+            Sound.whoosh();
+          },
+          progress: function (p) {
+            if (S.mode === "fall") S.qT = clamp(p, 0, 1);
+          },
+          fail: function () {
+            if (S.mode === "fall") {
+              S.mode = "stuck";
+              S.stuckT = 0;
+              Sound.stall();
+              Haptic([30, 50, 30]);
+            }
+          },
+          resume: function () {
+            if (S.mode === "stuck") {
+              S.mode = "fall";
+              S.om += 0.6;
+            }
+          },
+          stop: function () {
+            reset();
+          },
+          wind: function (v) {
+            S.windT = clamp(v, -1, 1);
+          },
+          destroy: function () {
+            cancelAnimationFrame(raf);
+            window.removeEventListener("resize", sizeCanvas);
+          },
+        };
+      };
+
+      /*
+        The download. Simulated so the experiment works offline (the file itself is real: a
+        postcard image generated in the page). To use a real endpoint, swap the body for a
+        fetch() reading response.body chunks and call on.progress(received, total).
+        Resumable: start(from) continues from a fraction already received.
+      */
+      window.simulateDownload = function (opts, on) {
+        var total = opts.size,
+          dur = 8.5,
+          failAt = opts.fail ? 0.66 + Math.random() * 0.14 : 2;
+        var got = (opts.from || 0) * total,
+          mult = 1,
+          next = 0,
+          t = 0,
+          stopped = false,
+          lastT = performance.now();
+        var id = setInterval(function () {
+          if (stopped) return;
+          var now = performance.now(),
+            dt = Math.min((now - lastT) / 1000, 0.25);
+          lastT = now;
+          t += dt;
+          if (t >= next) {
+            var r = Math.random();
+            mult =
+              r < 0.1 ? 0.08 : r < 0.35 ? 0.55 + Math.random() * 0.3 : 0.9 + Math.random() * 0.7;
+            next = t + 0.3 + Math.random() * 0.6;
+          }
+          got = Math.min(total, got + (total / dur) * mult * dt);
+          on.progress(got, total);
+          if (got / total >= failAt) {
+            stopped = true;
+            clearInterval(id);
+            on.error(got / total);
+          } else if (got >= total) {
+            stopped = true;
+            clearInterval(id);
+            on.done();
+          }
+        }, 50);
+        return {
+          abort: function () {
+            stopped = true;
+            clearInterval(id);
+          },
+        };
+      };
+    </script>
+
+    <script type="text/babel" data-presets="react">
+      const { useState, useEffect, useRef, useLayoutEffect } = React;
+
+      const FILE_NAME = "Postcard-from-above.png";
+      const DEVICE_W = 393;
+      const DEVICE_H = 852;
+
+      function fmtSize(b) {
+        if (b < 1024) return b + " B";
+        if (b < 1048576) return (b / 1024).toFixed(b < 10240 ? 1 : 0) + " KB";
+        return (b / 1048576).toFixed(1) + " MB";
+      }
+
+      // A real file to deliver: a postcard drawn in the page, so Open File has something to show.
+      async function makePostcard() {
+        try {
+          await Promise.all([document.fonts.load("700 100px Inter"), document.fonts.load("600 28px Inter")]);
+        } catch (_) {}
+        const c = document.createElement("canvas");
+        c.width = 1600;
+        c.height = 1000;
+        const x = c.getContext("2d");
+        const g = x.createLinearGradient(0, 0, 0, 1000);
+        g.addColorStop(0, "#f8f8f8");
+        g.addColorStop(1, "#f8f8f8");
+        x.fillStyle = g;
+        x.fillRect(0, 0, 1600, 1000);
+        const zg = x.createRadialGradient(1140, 840, 10, 1140, 840, 320);
+        zg.addColorStop(0, "rgba(18,18,18,.9)");
+        zg.addColorStop(0.6, "rgba(18,18,18,.9)");
+        zg.addColorStop(1, "rgba(18,18,18,0)");
+        x.fillStyle = zg;
+        x.save();
+        x.translate(1140, 840);
+        x.scale(1, 0.18);
+        x.beginPath();
+        x.arc(0, 0, 320, 0, Math.PI * 2);
+        x.restore();
+        x.fill();
+        const grad = (x0, y0, x1, y1) => {
+          const gg = x.createLinearGradient(x0, y0, x1, y1);
+          gg.addColorStop(0, "#ffb36b");
+          gg.addColorStop(0.46, "#ff6f91");
+          gg.addColorStop(1, "#6e6bff");
+          return gg;
+        };
+        // canopy + lines + box
+        x.save();
+        x.translate(1140, 320);
+        x.fillStyle = "#121212";
+        x.strokeStyle = "rgba(14,14,18,0)";
+        x.lineWidth = 3;
+        x.beginPath();
+        x.moveTo(-150, 0);
+        x.bezierCurveTo(-150, -80, -85, -128, 0, -128);
+        x.bezierCurveTo(85, -128, 150, -80, 150, 0);
+        for (let i = 0; i < 4; i++) x.quadraticCurveTo(112 - i * 75, 16, 75 - i * 75, 0);
+        x.closePath();
+        x.shadowColor = "rgba(40,40,80,.18)";
+        x.shadowBlur = 40;
+        x.shadowOffsetY = 18;
+        x.fill();
+        x.shadowColor = "transparent";
+        // right third lime
+        x.save();
+        x.clip();
+        x.fillStyle = "#c6fa2c";
+        x.fillRect(40, -140, 140, 160);
+        x.restore();
+        x.strokeStyle = "#121212";
+        x.lineWidth = 2;
+        [[-140, -40], [-56, -16], [56, 10], [140, 34]].forEach(([a, b]) => {
+          x.beginPath();
+          x.moveTo(a, 2);
+          x.lineTo(b, 198);
+          x.stroke();
+        });
+        // coral centre panel
+        const pg = x.createLinearGradient(0, -128, 0, 0);
+        pg.addColorStop(0, "#7a42f7");
+        pg.addColorStop(1, "#7a42f7");
+        x.fillStyle = pg;
+        x.beginPath();
+        x.moveTo(-42, 0);
+        x.bezierCurveTo(-44, -66, -28, -127, 0, -127);
+        x.bezierCurveTo(28, -127, 44, -66, 42, 0);
+        x.closePath();
+        x.fill();
+        // the file
+        x.fillStyle = "#7a42f7";
+        x.beginPath();
+        x.moveTo(-52, 196);
+        x.lineTo(28, 196);
+        x.lineTo(70, 238);
+        x.lineTo(70, 366);
+        x.quadraticCurveTo(70, 382, 54, 382);
+        x.lineTo(-52, 382);
+        x.quadraticCurveTo(-68, 382, -68, 366);
+        x.lineTo(-68, 212);
+        x.quadraticCurveTo(-68, 196, -52, 196);
+        x.fill();
+        x.fillStyle = "#fff";
+        x.beginPath();
+        x.roundRect(-38, 300, 76, 36, 10);
+        x.fill();
+        x.fillStyle = "#121212";
+        x.font = "700 20px Inter, sans-serif";
+        x.textAlign = "center";
+        x.fillText("PNG", 0, 325);
+        x.textAlign = "left";
+        x.restore();
+        x.fillStyle = "#0e0e12";
+        x.font = "700 104px Inter, sans-serif";
+        x.fillText("A postcard", 140, 400);
+        x.fillStyle = "#7a42f7";
+        x.fillText("from above.", 140, 510);
+        x.font = "600 28px Inter, sans-serif";
+        x.fillStyle = "#9a9aa3";
+        x.fillText("DELIVERED BY PACKAGE DROP", 146, 580);
+        return new Promise((res) => c.toBlob((b) => res(b), "image/png"));
+      }
+
+      function useDeviceScale() {
+        const get = () => {
+          if (typeof window === "undefined" || window.innerWidth < 640) return null;
+          return Math.min(
+            1,
+            (window.innerHeight - 110) / DEVICE_H,
+            (window.innerWidth - 40) / DEVICE_W
+          );
+        };
+        const [s, setS] = useState(get);
+        useEffect(() => {
+          const on = () => setS(get());
+          window.addEventListener("resize", on);
+          return () => window.removeEventListener("resize", on);
+        }, []);
+        return s;
+      }
+
+      function StatusBar() {
+        return (
+          <div className="statusbar" aria-hidden="true">
+            <span>9:41</span>
+            <span className="island" />
+            <span className="flex items-center gap-[6px]">
+              <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor">
+                <rect x="0" y="8" width="3" height="4" rx="1" />
+                <rect x="5" y="5.5" width="3" height="6.5" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor">
+                <path d="M8 2.2c2.4 0 4.6.9 6.2 2.5l1.3-1.4C13.5 1.3 10.9.2 8 .2S2.5 1.3.5 3.3l1.3 1.4C3.4 3.1 5.6 2.2 8 2.2z" />
+                <path d="M8 6c1.4 0 2.6.5 3.6 1.4l1.3-1.4C11.6 4.8 9.9 4 8 4s-3.6.8-4.9 2l1.3 1.4C5.4 6.5 6.6 6 8 6z" />
+                <path d="M8 9.6c.6 0 1.1.2 1.5.6L8 11.8 6.5 10.2c.4-.4.9-.6 1.5-.6z" />
+              </svg>
+              <svg width="27" height="13" viewBox="0 0 27 13">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="22"
+                  height="12"
+                  rx="3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeOpacity=".4"
+                />
+                <rect x="2.5" y="2.5" width="18" height="8" rx="2" fill="currentColor" />
+                <path
+                  d="M24.5 4.5v4c.8-.3 1.4-1.1 1.4-2s-.6-1.7-1.4-2z"
+                  fill="currentColor"
+                  fillOpacity=".5"
+                />
+              </svg>
+            </span>
+          </div>
+        );
+      }
+
+      let docSeq = 0;
+      function DocIcon({ size = 74, ext = "PNG" }) {
+        const id = React.useMemo(() => "docc" + ++docSeq, []);
+        return (
+          <svg width={size} height={size * 1.24} viewBox="0 0 40 50" aria-hidden="true">
+            <defs>
+              <clipPath id={id}>
+                <path d="M8 2h18l11 11v29a6 6 0 0 1-6 6H8a6 6 0 0 1-6-6V8a6 6 0 0 1 6-6z" />
+              </clipPath>
+            </defs>
+            <g clipPath={`url(#${id})`}>
+              <rect x="0" y="0" width="10.5" height="50" fill="#121212" />
+              <rect x="10.5" y="0" width="14.5" height="50" fill="#7a42f7" />
+              <rect x="25" y="0" width="15" height="50" fill="#c6fa2c" />
+            </g>
+            <path d="M26 2v8a3 3 0 0 0 3 3h8" fill="#fff" />
+            <path d="M10.5 21h15" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
+            <path d="M10.5 25.5h17" stroke="#121212" strokeWidth="1.6" strokeLinecap="round" />
+            <rect x="7.5" y="32" width="25" height="10" rx="5" fill="#fff" />
+            <text x="20" y="39.4" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="700" fontSize="5.8" letterSpacing="0.5" fill="#121212">
+              {ext}
+            </text>
+          </svg>
+        );
+      }
+      function Arrow() {
+        return (
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+            <path d="M11 3.5v10M6.5 9.5 11 14l4.5-4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M3.5 14.5v2a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        );
+      }
+
+      // The scene: the runway and landing pad, the file and its parachute, drawn in screen pixels.
+      function Scene({ r, on }) {
+        return (
+          <div className={`scene ${on ? "on" : ""}`} aria-hidden="true">
+            <svg>
+              <defs>
+                <linearGradient id="foldSheen" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0" stopColor="#c6fa2c" stopOpacity="0" />
+                  <stop offset="0.55" stopColor="#c6fa2c" stopOpacity="0.85" />
+                  <stop offset="1" stopColor="#c6fa2c" />
+                </linearGradient>
+              </defs>
+              {/* runway */}
+              <polygon ref={r.roadB} className="runway-band runway-black" points="" fill="#121212" />
+              <polygon ref={r.roadV} className="runway-band runway-violet" points="" fill="#7a42f7" />
+              <polygon ref={r.roadL} className="runway-band runway-lime" points="" fill="#c6fa2c" />
+              {/* landing pad */}
+              <g ref={r.zone}>
+                <ellipse ref={r.pad} rx="31" ry="3.6" fill="#121212" />
+              </g>
+              <ellipse ref={r.shadow} cx="200" cy="720" rx="20" ry="4" fill="#121212" style={{ opacity: 0 }} />
+              <g ref={r.drop} style={{ opacity: 0 }}>
+                <path ref={r.lines} d="" fill="none" stroke="#121212" strokeWidth="1.2" strokeLinecap="round" style={{ opacity: 0 }} />
+                <g ref={r.chute} style={{ opacity: 0 }}>
+                  {/* underside, seen through the arches */}
+                  <path ref={r.cUL} d="" fill="#ececec" />
+                  <path ref={r.cUC} d="" fill="#efefef" />
+                  <path ref={r.cUR} d="" fill="#ececec" />
+                  {/* flat panels: black, violet, lime */}
+                  <path ref={r.cLavL} d="" fill="#121212" />
+                  <path ref={r.cWhiteL} d="" fill="#121212" />
+                  <path ref={r.cLavR} d="" fill="#c6fa2c" />
+                  <path ref={r.cWhiteR} d="" fill="#c6fa2c" />
+                  <path ref={r.cCoral} d="" fill="#7a42f7" />
+                  <path ref={r.cCoralSheen} d="" fill="none" />
+                  <path ref={r.cRim} d="" fill="none" />
+                  {/* dark outer tips */}
+                  <path d="M-54,1 Q-50,-4 -46,-1.5 L-49.5,4.5 Z" fill="#121212" />
+                  <path d="M54,0 Q50,-4 46,-1.5 L49.5,4.5 Z" fill="#121212" />
+                </g>
+                <g ref={r.box}>
+                  {/* touchdown mark */}
+                  <g ref={r.file} style={{ opacity: 0 }}>
+                    <ellipse rx="40" ry="6" fill="rgba(122,66,247,0.25)" />
+                  </g>
+                  <g transform="scale(1.35)">
+                    <path d="M-19,-32 H10 L25,-17 V26 a6,6 0 0 1 -6,6 H-19 a6,6 0 0 1 -6,-6 V-26 a6,6 0 0 1 6,-6 Z" fill="#7a42f7" />
+                    {/* crisp lime side panel descending from the folded corner */}
+                    <path d="M7,-32 H10 L25,-17 V26 a6,6 0 0 1 -6,6 H13 C10,12 9,-10 7,-32 Z" fill="#c6fa2c" />
+                    <path d="M10,-32 L25,-17 H14 a4,4 0 0 1 -4,-4 Z" fill="#e4ff8f" />
+                    <path
+                      d="M-19,-32 H10 L25,-17 V26 a6,6 0 0 1 -6,6 H-19 a6,6 0 0 1 -6,-6 V-26 a6,6 0 0 1 6,-6 Z"
+                      fill="none"
+                      stroke="#fff"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                    <path d="M-14,-13 H7 M-14,-7 H7" stroke="#fff" strokeWidth="1.3" strokeLinecap="round" />
+                    <rect x="-14" y="7" width="27" height="13" rx="3.6" fill="#fff" />
+                    <text x="-0.5" y="16.2" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="700" fontSize="6.6" letterSpacing="0.3" fill="#121212">
+                      PNG
+                    </text>
+                  </g>
+                </g>
+              </g>
+            </svg>
+            <canvas ref={r.fx} />
+          </div>
+        );
+      }
+
+      function App() {
+        const scale = useDeviceScale();
+        const framed = scale !== null;
+        const [phase, setPhase] = useState("card"); // card | sky | delivered | failed
+        const [file, setFile] = useState(null); // { url, size }
+        const [pct, setPct] = useState(0);
+        const [failPct, setFailPct] = useState(0);
+        const [live, setLive] = useState("");
+
+        const screenRef = useRef(null);
+        const tagNum = useRef(null);
+        const drop = useRef(null);
+        const dl = useRef(null);
+        const received = useRef(0);
+        const failOnce = useRef(
+          (() => {
+            try {
+              return new URLSearchParams(location.search).get("fail") === "1";
+            } catch (_) {
+              return false;
+            }
+          })()
+        );
+        const primaryRef = useRef(null);
+        const cardRef = useRef(null);
+        const R = {
+          fx: useRef(null),
+          roadB: useRef(null),
+          roadV: useRef(null),
+          roadL: useRef(null),
+          pad: useRef(null),
+          zone: useRef(null),
+          shadow: useRef(null),
+          drop: useRef(null),
+          lines: useRef(null),
+          chute: useRef(null),
+          cUL: useRef(null),
+          cUC: useRef(null),
+          cUR: useRef(null),
+          cLavL: useRef(null),
+          cLavR: useRef(null),
+          cWhiteL: useRef(null),
+          cWhiteR: useRef(null),
+          cCoral: useRef(null),
+          cCoralSheen: useRef(null),
+          cRim: useRef(null),
+          box: useRef(null),
+          file: useRef(null),
+        };
+
+        const frame = () => {
+          const el = screenRef.current;
+          const r = el.getBoundingClientRect();
+          return {
+            x: r.left,
+            y: r.top,
+            s: r.width / el.offsetWidth || 1,
+            w: el.offsetWidth,
+            h: el.offsetHeight,
+          };
+        };
+
+        useEffect(() => {
+          makePostcard().then((blob) =>
+            setFile({ url: URL.createObjectURL(blob), size: blob.size })
+          );
+          const els = {};
+          Object.keys(R).forEach((k) => (els[k] = R[k].current));
+          els.tag = document.getElementById("tag");
+          drop.current = createDrop(els, {
+            size: () => {
+              const f = frame();
+              return { w: f.w, h: f.h };
+            },
+            scale: () => frame().s,
+            onPhase: (p) => {
+              if (p === "open") setLive("Parachute open.");
+              if (p === "land") setLive("Landed.");
+            },
+            onDelivered: () => {
+              setPhase("delivered");
+              setLive("Package delivered.");
+            },
+          });
+          return () => {
+            drop.current.destroy();
+            dl.current && dl.current.abort();
+          };
+        }, []);
+
+        useEffect(() => {
+          drop.current && drop.current.resize();
+        }, [scale]);
+
+        // align each coloured word's band gradient with the screen's bands
+        useLayoutEffect(() => {
+          const fit = () => {
+            const card = cardRef.current;
+            if (!card) return;
+            const cr = card.getBoundingClientRect();
+            const sc = cr.width / card.offsetWidth || 1;
+            card.querySelectorAll(".band").forEach((el) => {
+              const r = el.getBoundingClientRect();
+              el.style.backgroundSize = card.offsetWidth + "px 100%";
+              el.style.backgroundPosition = -((r.left - cr.left) / sc) + "px 0";
+            });
+          };
+          fit();
+          if (document.fonts) document.fonts.ready.then(fit);
+          window.addEventListener("resize", fit);
+          return () => window.removeEventListener("resize", fit);
+        }, [scale]);
+
+        useEffect(() => {
+          if (phase === "delivered" || phase === "failed")
+            setTimeout(
+              () => primaryRef.current && primaryRef.current.focus({ preventScroll: true }),
+              650
+            );
+        }, [phase]);
+
+        function runDownload(from) {
+          const fail = failOnce.current;
+          failOnce.current = false;
+          dl.current = simulateDownload(
+            { size: file.size, from, fail },
+            {
+              progress: (got, total) => {
+                received.current = got / total;
+                drop.current.progress(got / total);
+                const p = Math.floor((got / total) * 100);
+                if (tagNum.current) tagNum.current.textContent = p;
+                setPct(p);
+              },
+              done: () => drop.current.progress(1),
+              error: (at) => {
+                setFailPct(Math.floor(at * 100));
+                drop.current.fail();
+                setTimeout(() => {
+                  setPhase("failed");
+                  setLive("Delivery interrupted.");
+                }, 700);
+              },
+            }
+          );
+        }
+
+        function startDrop() {
+          if (!file) return;
+          setPhase("sky");
+          setPct(0);
+          received.current = 0;
+          if (tagNum.current) tagNum.current.textContent = "0";
+          setLive("Download started. Your package is on its way.");
+          drop.current.start();
+          // the card's file icon lifts away as the package appears high in the sky
+          setTimeout(() => runDownload(0), 450);
+        }
+        function retry() {
+          setPhase("sky");
+          setLive("Retrying.");
+          drop.current.resume();
+          runDownload(received.current);
+        }
+        function cancel() {
+          dl.current && dl.current.abort();
+          drop.current.stop();
+          setPhase("card");
+          setLive("Download cancelled.");
+        }
+        function again() {
+          drop.current.stop();
+          setPhase("card");
+        }
+
+        // cursor / finger movement nudges the wind
+        function onMove(e) {
+          if (phase !== "sky" && phase !== "failed") return;
+          const f = frame();
+          const lx = (e.clientX - f.x) / f.s;
+          drop.current.wind(((lx / f.w) * 2 - 1) * 1.1);
+        }
+
+        const inSky = phase !== "card";
+        const sizeText = file ? fmtSize(file.size) : "…";
+        return (
+          <div className="stage">
+            <h1 className="sr-only">Package Drop: downloading means something is coming to you.</h1>
+            <div style={framed ? { width: DEVICE_W * scale, height: DEVICE_H * scale } : undefined}>
+              <div className="device" style={framed ? { transform: `scale(${scale})` } : undefined}>
+                <div className="screen" ref={screenRef} onPointerMove={onMove}>
+                  <StatusBar />
+                  <Scene r={R} on={inSky} />
+
+                  <div className={`hud ${phase === "sky" ? "on" : ""}`} aria-hidden="true">
+                    <div className="chip">
+                      <span className="pulse" />
+                      <span className="label">Incoming</span>
+                      <span className="divider" />
+                      <span className="what">{FILE_NAME}</span>
+                    </div>
+                  </div>
+                  <div id="tag" className="tag" aria-hidden="true">
+                    <b ref={tagNum}>0</b>%
+                  </div>
+
+                  <section
+                    ref={cardRef}
+                    className={`card-view ${inSky ? "away" : ""}`}
+                    aria-hidden={inSky}
+                    inert={inSky ? "" : undefined}
+                  >
+                    <p className="kicker">Shared with you</p>
+                    <h1>
+                      Something&rsquo;s
+                      <span className="line2">
+                        <span className="band v">on its</span> <span className="band l">way</span>.
+                      </span>
+                    </h1>
+                    <div className="file-block">
+                      <div
+                        className="doc"
+                        style={
+                          inSky
+                            ? { transform: "translateY(-240px) scale(0.4)", opacity: 0 }
+                            : undefined
+                        }
+                      >
+                        <DocIcon size={78} />
+                      </div>
+                      <p className="name">{FILE_NAME}</p>
+                      <p className="meta">
+                        {sizeText} &middot; From Mara &middot; Today
+                      </p>
+                      <button className="dl" onClick={startDrop} disabled={!file}>
+                        <span className="main">
+                          <Arrow /> Download
+                        </span>
+                      </button>
+                    </div>
+                  </section>
+
+                  {phase === "delivered" && file && (
+                    <section className="panel" aria-labelledby="done-h">
+                      <p className="label">
+                        <span className="dot" aria-hidden="true" />
+                        Delivered &middot; 100%
+                      </p>
+                      <h2 id="done-h" className="display">
+                        Package delivered.
+                      </h2>
+                      <div className="file-row">
+                        <DocIcon size={30} />
+                        <div style={{ minWidth: 0 }}>
+                          <p className="n">{FILE_NAME}</p>
+                          <p className="label">{sizeText}</p>
+                        </div>
+                      </div>
+                      <div className="actions">
+                        <a
+                          ref={primaryRef}
+                          className="btn primary"
+                          href={file.url}
+                          target="_blank"
+                          rel="noopener"
+                        >
+                          Open file
+                        </a>
+                        <button className="btn" onClick={again}>
+                          Drop another
+                        </button>
+                      </div>
+                    </section>
+                  )}
+
+                  {phase === "failed" && (
+                    <section className="panel" aria-labelledby="fail-h">
+                      <p className="label">
+                        <span className="dot warn" aria-hidden="true" />
+                        Stopped at {failPct}%
+                      </p>
+                      <h2 id="fail-h" className="display">
+                        Delivery interrupted.
+                      </h2>
+                      <p className="lede">
+                        The connection dropped while your package was in the air. Retry picks up
+                        where it left off.
+                      </p>
+                      <div className="actions">
+                        <button ref={primaryRef} className="btn primary" onClick={retry}>
+                          Retry
+                        </button>
+                        <button className="btn" onClick={cancel}>
+                          Cancel
+                        </button>
+                      </div>
+                    </section>
+                  )}
+
+                  <div
+                    className="sr-only"
+                    role="progressbar"
+                    aria-label="Download progress"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={phase === "delivered" ? 100 : pct}
+                  />
+                  <p className="sr-only" aria-live="polite">
+                    {live}
+                  </p>
+                  <span className="home-ind" aria-hidden="true" />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>
